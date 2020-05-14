@@ -47,12 +47,6 @@ def handle_actions(task):
 
 
 class Command(BaseCommand):
-    def add_arguments(self, parser):
-        parser.add_argument(
-            'account',
-            choices=SyncTask.objects.values_list('mastodon_credentials__server', flat=True),
-        )
-
     def handle(self, *args, **options):
         for task in SyncTask.objects.all():
             handle_actions(task)
