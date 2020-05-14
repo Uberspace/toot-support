@@ -1,0 +1,6 @@
+django==3.0.*
+mastodon.py
+pre-commit==1.17.*
+pytest==5.4.*
+pytest-django==3.9.*
+socialhub==1.0.0
