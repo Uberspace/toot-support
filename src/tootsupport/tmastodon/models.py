@@ -41,7 +41,7 @@ class Account(models.Model):
         Credential,
         on_delete=models.CASCADE, related_name='accounts',
     )
-    api_id = models.BigIntegerField()
+    api_id = models.BigIntegerField(unique=True, db_index=True)
     acct = models.CharField(max_length=1024)
     display_name = models.CharField(max_length=1024)
     url = models.URLField()
@@ -84,13 +84,13 @@ class Toot(models.Model):
         on_delete=models.CASCADE, related_name='toots',
     )
     in_reply_to = models.ForeignKey('Toot', on_delete=models.CASCADE, null=True)
-    api_id = models.BigIntegerField(unique=True)
-    api_notification_id = models.BigIntegerField(null=True)
+    api_id = models.BigIntegerField(unique=True, db_index=True)
+    api_notification_id = models.BigIntegerField(null=True, unique=True, db_index=True)
     url = models.URLField()
     created_at = models.DateTimeField()
     content = models.TextField()
     visibility = models.CharField(max_length=8, choices=Visibility.choices)
-    socialhub_id = models.CharField(max_length=128, null=True)
+    socialhub_id = models.CharField(max_length=128, null=True, unique=True, db_index=True)
 
     @property
     def content_stripped(self):
