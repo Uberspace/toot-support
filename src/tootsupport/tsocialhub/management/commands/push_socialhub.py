@@ -15,45 +15,43 @@ def find_root(toot):
     return toot.network_id
 
 
-class Command(BaseCommand):
-    def add_arguments(self, parser):
-        parser.add_argument(
-            'account',
-            choices=SyncTask.objects.values_list('mastodon_credentials__server', flat=True),
-        )
+def push_toots(task):
+    client = task.api_client()
 
-    def handle(self, account, *args, **options):
-        task = SyncTask.objects.get(mastodon_credentials__server=account)
-        client = task.api_client()
+    toots = task.mastodon_credentials.toots.filter(socialhub_id__isnull=True)
 
-        toots = task.mastodon_credentials.toots.filter(socialhub_id__isnull=True)
-
-        for toot in toots:
-            try:
-                root_id = find_root(toot)
-                socialhub_id = client.create_ticket(
-                    toot.content_stripped,
-                    toot.network_id,
-                    toot.url,
-                    root_id=(root_id if root_id else None),
-                    interactor=socialhub.TicketInteractor(
-                        toot.account.network_id,
-                        toot.account.display_name,
-                        toot.account.url,
-                        toot.account.avatar,
-                    )
+    for toot in toots:
+        try:
+            root_id = find_root(toot)
+            socialhub_id = client.create_ticket(
+                toot.content_stripped,
+                toot.network_id,
+                toot.url,
+                root_id=(root_id if root_id else None),
+                interactor=socialhub.TicketInteractor(
+                    toot.account.network_id,
+                    toot.account.display_name,
+                    toot.account.url,
+                    toot.account.avatar,
                 )
-            except socialhub.SocialHubError as ex:
-                if ex.code == 'ConflictError':
-                    toot.socialhub_id = 'unknown-' + toot.network_id
-                    toot.save()
+            )
+        except socialhub.SocialHubError as ex:
+            if ex.code == 'ConflictError':
+                toot.socialhub_id = 'unknown-' + toot.network_id
+                toot.save()
 
-                    raise Exception(
-                        f'ticket {toot.network_id} cannot be created, '
-                        'because it was synced already but we lost track of it.'
-                    ) from ex
-                else:
-                    raise
+                raise Exception(
+                    f'ticket {toot.network_id} cannot be created, '
+                    'because it was synced already but we lost track of it.'
+                ) from ex
+            else:
+                raise
 
-            toot.socialhub_id = socialhub_id
-            toot.save(update_fields=['socialhub_id'])
+        toot.socialhub_id = socialhub_id
+        toot.save(update_fields=['socialhub_id'])
+
+
+class Command(BaseCommand):
+    def handle(self, *args, **options):
+        for task in SyncTask.objects.all():
+            push_toots(task)

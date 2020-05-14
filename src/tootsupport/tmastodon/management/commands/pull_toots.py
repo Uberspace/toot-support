@@ -1,8 +1,9 @@
 from collections import deque
 
+import mastodon
 from django.core.management.base import BaseCommand
 from django.db import IntegrityError
-import mastodon
+
 from ...models import Credential
 from ...models import Toot
 
@@ -42,7 +43,7 @@ def pull_toots(credential):
 
             try:
                 Toot.create_from_api(credential, status, api_notification_id=notification.id)
-            except IntegrityError as ex:
+            except IntegrityError:
                 pass  # we already know that one
 
         # get the next-newest (previous in ID-order) page
@@ -51,12 +52,6 @@ def pull_toots(credential):
 
 
 class Command(BaseCommand):
-    def add_arguments(self, parser):
-        parser.add_argument(
-            'account',
-            choices=Credential.objects.values_list('server', flat=True),
-        )
-
-    def handle(self, account, *args, **options):
-        credential = Credential.objects.get(server=account)
-        pull_toots(credential)
+    def handle(self, *args, **options):
+        for credential in Credential.objects.all():
+            pull_toots(credential)
