@@ -1,7 +1,10 @@
+import logging
+
 from django.core.management.base import BaseCommand
 
 import socialhub
 
+from ....util import log
 from ...models import SyncTask
 
 
@@ -16,11 +19,15 @@ def find_root(toot):
 
 
 def push_toots(task):
+    logging.info('pushing toots for %s', task)
+
     client = task.api_client()
 
     toots = task.mastodon_credentials.toots.filter(socialhub_id__isnull=True)
 
     for toot in toots:
+        logging.info('pushing %s', toot)
+
         try:
             root_id = find_root(toot)
             socialhub_id = client.create_ticket(
@@ -40,10 +47,10 @@ def push_toots(task):
                 toot.socialhub_id = 'unknown-' + toot.network_id
                 toot.save()
 
-                raise Exception(
-                    f'ticket {toot.network_id} cannot be created, '
-                    'because it was synced already but we lost track of it.'
-                ) from ex
+                logging.info(
+                    'ticket %s cannot be created, because it was synced already '
+                    'but we lost track of it.', toot.network_id,
+                )
             else:
                 raise
 
@@ -53,5 +60,7 @@ def push_toots(task):
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
+        log.init()
+
         for task in SyncTask.objects.all():
             push_toots(task)

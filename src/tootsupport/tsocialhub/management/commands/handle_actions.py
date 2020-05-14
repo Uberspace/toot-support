@@ -1,6 +1,9 @@
+import logging
+
 from django.core.management.base import BaseCommand
 
 from ....tmastodon.models import Toot
+from ....util import log
 from ...models import SyncTask
 
 
@@ -29,14 +32,19 @@ def handle_action(action):
 
 
 def handle_actions(task):
+    logging.info('handling actions for %s', task)
+
     actions = task.actions.filter(handled=False)
 
     for action in actions:
         client_socialhub = action.task.api_client()
 
+        logging.info('handling %s', action)
+
         try:
             handle_action(action)
         except Exception as ex:
+            logging.info('failed %s', ex)
             client_socialhub.followup_reset(
                 action.toot.socialhub_id, action.payload_json()['followupId'], action.action_id,
                 str(ex)
@@ -48,5 +56,7 @@ def handle_actions(task):
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
+        log.init()
+
         for task in SyncTask.objects.all():
             handle_actions(task)

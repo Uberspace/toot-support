@@ -38,6 +38,9 @@ class SyncTask(models.Model):
             ),
         ])
 
+    def __str__(self):
+        return f'<SyncTask {self.mastodon_credentials}>'
+
 
 class TicketAction(models.Model):
     class Kind(models.TextChoices):
@@ -52,3 +55,6 @@ class TicketAction(models.Model):
 
     def payload_json(self):
         return json.loads(self.payload)
+
+    def __str__(self):
+        return f'<TicketAction {self.task.mastodon_credentials} {self.action_id}>'
