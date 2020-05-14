@@ -55,9 +55,10 @@ class Account(models.Model):
         return f'mastodon_account_{self.credentials.friendly_hostname}_{self.api_id}'
 
     @classmethod
-    def get_or_create_from_api(cls, account):
+    def get_or_create_from_api(cls, account, credentials):
         return Account.objects.get_or_create(
             api_id=account.id,
+            credentials=credentials,
             defaults={
                 'acct': account.acct,
                 'display_name': account.display_name,
@@ -97,7 +98,7 @@ class Toot(models.Model):
 
     @classmethod
     def create_from_api(cls, credentials, status, **kwargs):
-        account = Account.get_or_create_from_api(status.account)
+        account = Account.get_or_create_from_api(status.account, credentials)
         in_reply_to = None
 
         if status.in_reply_to_id:
