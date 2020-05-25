@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 
 
 class Credential(models.Model):
+    name = models.CharField(_('Name'), max_length=64)
     server = models.URLField()
     client_key = models.CharField(
         _('App Client Key/ID'),
