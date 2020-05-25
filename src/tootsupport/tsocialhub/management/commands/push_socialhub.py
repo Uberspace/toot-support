@@ -37,7 +37,7 @@ def push_toots(task):
                 root_id=(root_id if root_id else None),
                 interactor=socialhub.TicketInteractor(
                     toot.account.network_id,
-                    toot.account.display_name,
+                    toot.account.display_name or toot.account.acct,
                     toot.account.url,
                     toot.account.avatar,
                 )
