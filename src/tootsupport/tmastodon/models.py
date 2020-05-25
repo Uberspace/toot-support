@@ -15,6 +15,12 @@ class Credential(models.Model):
     )
     client_secret = models.CharField(_('App Client Secret'), max_length=64)
     access_token = models.CharField(_('Account Access Token'), max_length=64)
+    url_template = models.CharField(
+        _('Template to construct URLs to toots'),
+        help_text=_('use any {toot_dict_field}: https://mastodonpy.readthedocs.io/en/stable/#toot-dicts'),
+        max_length=64,
+        null=True, blank=True,
+    )
 
     def api_client(self):
         from mastodon import Mastodon
@@ -107,12 +113,15 @@ class Toot(models.Model):
             except cls.DoesNotExist as ex:
                 raise Exception('parent toot cannot be found') from ex
 
+        url_template = credentials.url_template or '{url}'
+        url = url_template.format(**status)
+
         return cls.objects.create(
             credentials=credentials,
             account=account,
             in_reply_to=in_reply_to,
             api_id=status.id,
-            url=status.url,
+            url=url,
             created_at=status.created_at,
             content=status.content,
             visibility=status.visibility,
