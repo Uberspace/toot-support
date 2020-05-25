@@ -40,7 +40,7 @@ class Credential(models.Model):
         return hostname
 
     def __str__(self):
-        return f'<Credentials {self.server}>'
+        return f'<Credentials {self.name}>'
 
 
 class Account(models.Model):
