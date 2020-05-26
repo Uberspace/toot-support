@@ -62,7 +62,7 @@ def pull_toots(credential):
             try:
                 Toot.create_from_api(credential, status, api_notification_id=notification.id)
             except IntegrityError as ex:
-                if 'api_id' in str(ex):
+                if 'unique-toot-api-id-per-server' in str(ex):
                     logging.info('skipped, due to duplication %s', ex)
                 else:
                     raise

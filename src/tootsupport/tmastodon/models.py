@@ -56,7 +56,7 @@ class Account(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['api_id', 'credentials'], name='account API id per server')
+            models.UniqueConstraint(fields=['api_id', 'credentials'], name='unique-account-api-id-per-server')
         ]
 
     def __str__(self):
@@ -107,7 +107,7 @@ class Toot(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['api_id', 'credentials'], name='toot API id per server')
+            models.UniqueConstraint(fields=['api_id', 'credentials'], name='unique-toot-api-id-per-server')
         ]
 
     @property
