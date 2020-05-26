@@ -48,11 +48,16 @@ class Account(models.Model):
         Credential,
         on_delete=models.CASCADE, related_name='accounts',
     )
-    api_id = models.BigIntegerField(unique=True, db_index=True)
+    api_id = models.BigIntegerField(db_index=True)
     acct = models.CharField(max_length=1024)
     display_name = models.CharField(max_length=1024)
     url = models.URLField()
     avatar = models.URLField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['api_id', 'credentials'], name='account API id per server')
+        ]
 
     def __str__(self):
         return f'<Account {self.acct}>'
@@ -65,7 +70,7 @@ class Account(models.Model):
     def get_or_create_from_api(cls, account, credentials):
         return Account.objects.get_or_create(
             api_id=account.id,
-            credentials=credentials,
+            credentials__server=credentials.server,
             defaults={
                 'acct': account.acct,
                 'display_name': account.display_name,
@@ -91,13 +96,18 @@ class Toot(models.Model):
         on_delete=models.CASCADE, related_name='toots',
     )
     in_reply_to = models.ForeignKey('Toot', on_delete=models.CASCADE, null=True)
-    api_id = models.BigIntegerField(unique=True, db_index=True)
+    api_id = models.BigIntegerField(db_index=True)
     api_notification_id = models.BigIntegerField(null=True, unique=True, db_index=True)
     url = models.URLField()
     created_at = models.DateTimeField()
     content = models.TextField()
     visibility = models.CharField(max_length=8, choices=Visibility.choices)
     socialhub_id = models.CharField(max_length=128, null=True, unique=True, db_index=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['api_id', 'credentials'], name='toot API id per server')
+        ]
 
     @property
     def content_stripped(self):
@@ -110,7 +120,10 @@ class Toot(models.Model):
 
         if status.in_reply_to_id:
             try:
-                in_reply_to = cls.objects.get(api_id=status.in_reply_to_id)
+                in_reply_to = cls.objects.get(
+                    api_id=status.in_reply_to_id,
+                    credentials__server=credentials.server,
+                )
             except cls.DoesNotExist as ex:
                 raise Exception('parent toot cannot be found') from ex
 

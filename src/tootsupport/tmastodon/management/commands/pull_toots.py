@@ -39,7 +39,7 @@ def pull_toots(credential):
                          status.id, notification.id, status.url)
 
             if status.in_reply_to_id and \
-                    not Toot.objects.filter(api_id=status.in_reply_to_id).exists():
+                    not Toot.objects.filter(api_id=status.in_reply_to_id, credentials__server=credential.server).exists():
 
                 logging.info('postponed due to missing parent toot: %s', status.in_reply_to_id)
 
