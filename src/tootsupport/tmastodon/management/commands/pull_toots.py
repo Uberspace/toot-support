@@ -43,15 +43,21 @@ def pull_toots(credential):
 
                 logging.info('postponed due to missing parent toot: %s', status.in_reply_to_id)
 
-                # if the referenced toot does not yet exist in our DB,
-                # process it later and then re-process this one.
-                to_process.append(mastodon.AttribAccessDict({
-                    'type': 'mention',
-                    'id': None,
-                    'status': client.status(status.in_reply_to_id),
-                }))
-                to_process.append(notification)
-                continue
+                try:
+                    parent_status = client.status(status.in_reply_to_id)
+
+                    # if the referenced toot does not yet exist in our DB,
+                    # process it later and then re-process this one.
+                    to_process.append(mastodon.AttribAccessDict({
+                        'type': 'mention',
+                        'id': None,
+                        'status': parent_status,
+                    }))
+                    to_process.append(notification)
+                    continue
+                except (mastodon.MastodonNotFoundError, mastodon.MastodonUnauthorizedError):
+                    # there is a parent toot somewhere, but we can't load it, ignore it.
+                    status.in_reply_to_id = None
 
             try:
                 Toot.create_from_api(credential, status, api_notification_id=notification.id)
