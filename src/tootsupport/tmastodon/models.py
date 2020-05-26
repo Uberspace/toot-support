@@ -76,6 +76,7 @@ class Account(models.Model):
                 'display_name': account.display_name,
                 'url': account.url,
                 'avatar': account.avatar,
+                'credentials': credentials,
             }
         )[0]
 
