@@ -42,7 +42,7 @@ def webhook(request, task_id):
 
         # mastodon_uberspace-social_104145826783865959
         _, _, toot_api_id = event['networkItemId'].split('_')
-        toot = task.mastodon_credentials.get(api_id=toot_api_id)
+        toot = task.mastodon_credentials.toots.get(api_id=toot_api_id)
 
         TicketAction.objects.create(
             task=task,
