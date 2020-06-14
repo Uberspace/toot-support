@@ -120,13 +120,15 @@ class Toot(models.Model):
         in_reply_to = None
 
         if status.in_reply_to_id:
+            toots = cls.objects.filter(api_id=status.in_reply_to_id)
+
             try:
-                in_reply_to = cls.objects.get(
-                    api_id=status.in_reply_to_id,
-                    credentials__server=credentials.server,
-                )
+                in_reply_to = toots.get(credentials=credentials)
             except cls.DoesNotExist as ex:
-                raise Exception('parent toot cannot be found') from ex
+                try:
+                    in_reply_to = toots.filter(credentials__server=credentials.server)[0]
+                except IndexError:
+                    raise Exception('parent toot cannot be found') from ex
 
         url_template = credentials.url_template or '{url}'
         url = url_template.format(**status)
